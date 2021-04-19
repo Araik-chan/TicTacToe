@@ -1,6 +1,7 @@
 # TicTacToe
-Play Tic Tac Toe Against API
+# Play Tic Tac Toe Against API
 
+--------------------------------------------------------------------------
 Project Break down: 
 --------------------------------------------------------------------------
 As i have very basic experence with the languages requested, I decided to use a premade base of a Tic Toc Toe game as a reference. 
