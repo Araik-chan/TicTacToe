@@ -1,0 +1,3 @@
+Player: X,col: 2,row: 0
+Player: O,col: 4,row: 1
+End

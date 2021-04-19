@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using TicTacToe.Models;
+using TicTacToe_API;
 
 namespace TicTacToe.Controllers
 {
@@ -21,6 +22,22 @@ namespace TicTacToe.Controllers
         public IActionResult Index()
         {
             return View();
+        }
+
+        [HttpGet]
+        public JsonResult Get_Next_Play(string player, int row, int col, string pos)
+        {
+            int poss = (Convert.ToInt32(pos) + 1);
+            string id = "#" + poss;
+            List<Player_Move> player2_move = TicTacToe_API.Program.Return_Position(player, row, col, id);
+            return Json(player2_move);
+        }
+
+        [HttpGet]
+        public JsonResult Game_Over(string winner,string player)
+        {
+            bool End = TicTacToe_API.Program.End_Game(winner, player);
+            return Json(End);
         }
 
         public IActionResult Privacy()

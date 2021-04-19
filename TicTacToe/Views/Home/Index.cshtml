@@ -1,8 +1,249 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    //ViewData["Title"] = "Home Page";
+    Layout = null;
 }
+<link href="~/css/Grid.css" rel="stylesheet" />
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+
+
+<div ng-app="ticTacToeApp" class="ng-cloak" ng-cloak="">
+    <div ng-controller="gameController as ctrl">
+        <div class="Heading">
+            <h1>Play Tic Tac Toe</h1>
+            <p>Making a move on the board below to start game.</p>
+        </div>
+        <div class="gameinfo">          
+            <button ng-click="ctrl.newGame($event);">new game</button>
+            <p ng-show="errors">{{errors}}</p>
+        </div>
+        <hr />
+        <div class="Gameboard">
+            <div class="board">
+                <p ng-show="!winner && !draw">{{currentPlayer}}'s turn</p>
+                <p ng-show="winner" class="won">{{currentPlayer}} WON</p>
+                <p ng-show="draw">DRAW</p>
+                <div ng-repeat="positionInfo in board" class="square" id="{{positionInfo.pos}}" ng-mouseup="p2()" ng-click="ctrl.playTurn($event, positionInfo)" ng-class="{'floatme': !($index % boardsize)}">
+                    {{positionInfo.player}}
+                </div>
+
+            </div>
+        </div>
+        
+    </div>
 </div>
+
+
+
+
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
+<script>
+    angular.module('ticTacToeApp', []);
+
+    angular.module('ticTacToeApp').controller('gameController',
+    ['$scope', 'GameDataService', function ($scope, GameDataService)
+    {
+            var player1 = 'X';
+            var player2 = 'O';
+            var played = null;
+            $scope.currentPlayer = player1;
+            $scope.newSize = 3;
+            $scope.newNumberToWin = 3;
+
+            var initData = function () {
+                played = [];
+                $scope.winner = null;
+                $scope.draw = null;
+                $scope.boardsize = $scope.newSize;
+                $scope.numberToWin = $scope.newNumberToWin;
+                $scope.board = GameDataService.getBoardBySize($scope.boardsize);
+            };
+
+            var evaluateTurn = function () {
+
+                var movesByPlayer = _.filter(played, { 'player': $scope.currentPlayer });
+                if (movesByPlayer.length < $scope.numberToWin)
+                {
+                    return; //not enough moves, don't bother checking
+                }
+
+                var diagonalDownCount = 0; //00, 11, 22 - diagonal top left to bottom right positions
+                var diagonalUpCount = 0;  //20, 11, 02 - diagonal bottom left to top right positions
+
+                for (var i = 0; i < $scope.numberToWin; i++) {
+                    var rowCount = 0; //check every row
+                    var colCount = 0;  //check every column
+                    var diagonalUpIndex = $scope.numberToWin - 1 - i; //2, 1, 0 diagonal up column index
+
+                    _.each(movesByPlayer, function (move) {
+                        if (move.row === i && move.col === i) {
+                            diagonalDownCount += 1;
+                        }
+                        if (move.row === diagonalUpIndex && move.col === i) {
+                            diagonalUpCount += 1;
+                        }
+                        if (move.row === i) {
+                            rowCount += 1;
+                        }
+                        if (move.col === i) {
+                            colCount += 1;
+                        }
+                        if (diagonalUpCount === $scope.numberToWin
+                            || diagonalDownCount === $scope.numberToWin
+                            || colCount === $scope.numberToWin
+                            || rowCount === $scope.numberToWin) {
+
+                            $scope.winner = $scope.currentPlayer;
+                            return;
+                            //send value if won
+                        }
+                    });
+                }
+
+                //no winner but all positions have been played
+                if (played.length === ($scope.boardsize * $scope.boardsize)) {
+                    $scope.draw = true;
+                    //return Value  if value draw
+
+                }
+            };
+
+            var changePlayer = function () {
+                $scope.currentPlayer = ($scope.currentPlayer === player1)
+                    ? player2
+                    : player1;
+                //if player 2 auto play with API
+
+
+            };
+            var save = function (positionInfo) {
+
+                         $.ajax({
+                           url: '@Url.Action("Get_Next_Play", "Home")',
+                             type: 'GET',
+                             data: { player: positionInfo.player, row: positionInfo.row, col: positionInfo.col, pos: positionInfo.pos },
+                           success: function (result) {
+
+
+                               $.each(result, function (i, o)
+                               {
+                                   var id = o.pos;
+                                   positionInfo = o;
+
+                                   angular.element(id).triggerHandler('click', positionInfo);
+
+                             });
+
+                           },
+                           error: function (error) {
+                               $(this).remove();
+                               DisplayError(error.statusText);
+                           }
+                 });
+        }
+            var save_win = function (winner,player) {
+                debugger;
+                         $.ajax({
+                           url: '@Url.Action("Game_Over", "Home")',
+                             type: 'GET',
+                             data: { player: player, winner: winner },
+                           success: function (result) {
+                               debugger;
+
+                           },
+                           error: function (error) {
+                               $(this).remove();
+                               DisplayError(error.statusText);
+                           }
+                 });
+            }
+
+        this.playTurn = function ($event, positionInfo) {
+
+                $scope.errors = null;
+            if ($scope.winner)
+            {
+                debugger;
+                save_win($scope.winner, positionInfo.player);
+                    return;
+                }
+                if (positionInfo.player !== null) {
+                    return;
+                }
+
+                positionInfo.player = $scope.currentPlayer;
+
+                if(positionInfo.player == "X")
+                {
+
+                    played.push(positionInfo);
+                    evaluateTurn();
+                    if (!$scope.winner)
+                    { //change players if no winner
+                        changePlayer();
+                        save(positionInfo);
+                    }
+
+                }
+                else {
+
+
+                    played.push(positionInfo);
+                    evaluateTurn();
+                    if (!$scope.winner) { //change players if no winner
+                        changePlayer();
+
+                    }
+
+                }
+
+
+
+
+            };
+
+        this.newGame = function ($event)
+            {
+
+                    initData();
+
+            };
+
+            initData();
+
+     }]);
+
+
+    angular.module('ticTacToeApp').factory('GameDataService', function () {
+        var service = {};
+
+        var createBoard = function (boardsize) {
+            var data = [];
+            var count = 0;
+            var block = "bloc";
+            for (var i = 0; i < boardsize; i++) {
+                for (var j = 0; j < boardsize; j++)
+                {
+                    var id = count;
+                    data.push({ 'row': i, 'col': j, 'player': null, 'pos': id  });
+                    count = count + 1;
+                }
+            }
+            return data;
+        };
+
+        service.getDefaultBoard = function () {
+            return createBoard(3);
+        };
+
+        service.getBoardBySize = function (boardsize) {
+            return createBoard(boardsize);
+        };
+
+        return service;
+    });
+
+
+</script>
