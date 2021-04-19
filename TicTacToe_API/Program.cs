@@ -29,10 +29,21 @@ namespace TicTacToe_API
         public static List<Player_Move> Return_Position(string player, int row, int col,string pos)
         {
             
-            int count = 0;
+            int count = -1;
             string Index = @"C:\\Users\\kiara\\source\\repos\\TicTacToe\\TicTacToe_API\\Databases\\Index.txt";
-            string fileName = @"C:\\Users\\kiara\\source\\repos\\TicTacToe\\TicTacToe_API\\Databases\\Game" + count + ".txt";
-            int linecount = 0;
+            string fileName = @"C:\\Users\\kiara\\source\\repos\\TicTacToe\\TicTacToe_API\\Databases\\Game0.txt";
+            List<string> Index_List = new List<string>();
+
+
+
+            string[] Lines = System.IO.File.ReadAllLines(@"C:\\Users\\kiara\\source\\repos\\TicTacToe\\TicTacToe_API\\Databases\\Index.txt");
+            foreach (string line in Lines) // Read all line from the text file  
+            {
+                Index_List.Add(line);
+            }
+
+
+
 
             //Open file
             string s = "";
@@ -43,9 +54,9 @@ namespace TicTacToe_API
                 //Check if Game has been created 
                 while ((s = sr.ReadLine()) != null)
                 {
-                    linecount++;
                     using (StreamReader ar = File.OpenText(fileName))
                     {
+                        
                         string a = "";
                         while ((a = ar.ReadLine()) != null)
                         {
@@ -58,37 +69,25 @@ namespace TicTacToe_API
                         }
                     }
 
-                }
-
-                //check if game is in Index
-                linecount = linecount - 1;
-                s = sr.ReadLine();
-
-               
+                }             
                 
 
             }
 
-            if (s == null)
+
+
+            //Add file to index if it is not already in the index
+            if (!Index_List.Contains(count.ToString()))
             {
                 using (StreamWriter sw = File.AppendText(Index))
                 {
-                    sw.WriteLine();
+                    sw.WriteLine(count);
                     sw.Close();
                 }
             }
-            else
-            {
-                if (!s.Contains(linecount.ToString()))
-                {
-                    using (StreamWriter sw = File.AppendText(Index))
-                    {
-                        sw.WriteLine(linecount);
-                        sw.Close();
-                    }
-                }
-            }
-            // Create a new file or append to exsising file
+
+
+            // Create a new file or append to existing file
             using (StreamWriter sw = File.AppendText(fileName))
             {
                 sw.WriteLine("Player:" + player +  ",col:" + col + ",row:" + row);
@@ -102,8 +101,8 @@ namespace TicTacToe_API
             using (StreamReader sr = File.OpenText(fileName))
             {
                 string b = "";
-                int count_col = col + 1;
-                int count_row = row;
+                int count_col = 1;
+                int count_row = 0; 
                 string new_line = "";
                 List<string> check = new List<string>();
 
@@ -119,64 +118,16 @@ namespace TicTacToe_API
                                     
                 }
 
+
+
                 //Play Os Turn
                 do
                 {
+                    Random rnd = new Random();
                     new_line = count_col.ToString() + "," + count_row.ToString();
 
-                    if (count_col == 3)
-                    {
-                        count_col = 0;
-                    }
-                    else if(count_col == 0 && count_row == 0)
-                    {
-                        count_col = 1;
-                        count_row = 1;
-                    }
-                    else if (count_col == 0 && count_row == 1)
-                    {
-                        count_col = 1;
-                        count_row = 1;
-                    }
-                    else if (count_col == 0 && count_row == 2)
-                    {
-                        count_col = 1;
-                        count_row = 1;
-                    }
-                    else if (count_col == 1 && count_row == 0)
-                    {
-                        count_col = 1;
-                        count_row = 2;
-                    }
-                    else if (count_col == 1 && count_row == 1)
-                    {
-                        count_col = 1;
-                        count_row = 1;
-                    }
-                    else if (count_col == 1 && count_row == 2)
-                    {
-                        count_col = 0;
-                        count_row = 2;
-                    }
-                    else if (count_col == 2 && count_row == 0)
-                    {
-                        count_col = 2;
-                        count_row = 1;
-                    }
-                    else if (count_col == 2 && count_row == 1)
-                    {
-                        count_col = 0;
-                        count_row = 0;
-                    }
-                    else if (count_col == 2 && count_row == 2)
-                    {
-                        count_col = 1;
-                        count_row = 2;
-                    }
-                    if (count_row == 3)
-                    {
-                        count_row = 0;
-                    }
+                    count_col = rnd.Next(1, 3);
+                    count_row = rnd.Next(0, 2);
                 }
                 while (check.Contains(new_line));
 
@@ -198,11 +149,12 @@ namespace TicTacToe_API
             return play2;
         }
 
-        public static bool End_Game(string winner, string player)
+        public static bool End_Game(string winner)
         {
             int count = 0;
             string Index = @"C:\\Users\\kiara\\source\\repos\\TicTacToe\\TicTacToe_API\\Databases\\Index.txt";
             string fileName = @"C:\\Users\\kiara\\source\\repos\\TicTacToe\\TicTacToe_API\\Databases\\Game" + count + ".txt";
+
 
 
 
@@ -228,9 +180,13 @@ namespace TicTacToe_API
                 }
 
             }
+
+            var lines = System.IO.File.ReadAllLines(@"C:\\Users\\kiara\\source\\repos\\TicTacToe\\TicTacToe_API\\Databases\\Game" + count + ".txt");
+            System.IO.File.WriteAllLines(@"C:\\Users\\kiara\\source\\repos\\TicTacToe\\TicTacToe_API\\Databases\\Game" + count + ".txt", lines.Take(lines.Length - 1).ToArray());
+
             using (StreamWriter sw = File.AppendText(fileName))
             {
-                sw.WriteLine(winner + " " + player);
+                sw.WriteLine(winner);
                 sw.WriteLine("End");
                 sw.Close();
             }

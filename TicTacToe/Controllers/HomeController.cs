@@ -33,10 +33,12 @@ namespace TicTacToe.Controllers
             return Json(player2_move);
         }
 
+
+        // Get winner of game and pass  to API  
         [HttpGet]
-        public JsonResult Game_Over(string winner,string player)
+        public JsonResult Game_Over(string winner)
         {
-            bool End = TicTacToe_API.Program.End_Game(winner, player);
+            bool End = TicTacToe_API.Program.End_Game(winner);
             return Json(End);
         }
 
